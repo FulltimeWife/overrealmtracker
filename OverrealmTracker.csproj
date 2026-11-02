@@ -13,9 +13,9 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 
-    <Version>1.1.0</Version>
-    <FileVersion>1.1.0.0</FileVersion>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <Version>1.1.1</Version>
+    <FileVersion>1.1.1.0</FileVersion>
+    <AssemblyVersion>1.1.1.0</AssemblyVersion>
 
     <Product> Overrealm Tracker</Product>
     <Company>FulltimeWife</Company>
@@ -24,9 +24,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="icons\**\*">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-    </None>
+    <EmbeddedResource Include="icons\**\*" />
   </ItemGroup>
 </Project>

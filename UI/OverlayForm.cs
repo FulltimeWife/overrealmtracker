@@ -510,14 +510,37 @@ public sealed class OverlayForm : Form
 
   private Image? TryLoadIcon(string iconBaseName)
   {
-    if (string.IsNullOrEmpty(_config.IconsDir)) return null;
-    var path = Path.Combine(ConfigManager.AppDir, _config.IconsDir, iconBaseName + ".png");
-    if (!File.Exists(path)) return null;
-    try
+    if (string.IsNullOrEmpty(iconBaseName)) return null;
+
+    // Build from assembly by default
+    var assembly = typeof(OverlayForm).Assembly;
+    var resourceName = $"OverrealmTracker.icons.{iconBaseName}.png";
+
+    var stream = assembly.GetManifestResourceStream(resourceName);
+    if (stream is not null)
     {
-      using var src = Image.FromFile(path);
-      return new Bitmap(src, _config.IconSize, _config.IconSize);
+      using (stream)
+      {
+        using var src = Image.FromStream(stream);
+        return new Bitmap(src, _config.IconSize, _config.IconSize);
+      }
     }
-    catch { return null; }
+
+    // Build from local as a fallback
+    if (!string.IsNullOrEmpty(_config.IconsDir))
+    {
+      var path = Path.Combine(ConfigManager.AppDir, _config.IconsDir, iconBaseName + ".png");
+      if (File.Exists(path))
+      {
+        try
+        {
+          using var src = Image.FromFile(path);
+          return new Bitmap(src, _config.IconSize, _config.IconSize);
+        }
+        catch { return null; }
+      }
+    }
+
+    return null;
   }
 }
