@@ -80,6 +80,15 @@ public sealed class AppConfig
     [JsonPropertyName("obs_backdrop_color")]
     public string ObsBackdropColor { get; set; } = "#1e1e1e";
 
+    [JsonPropertyName("compact")]
+    public bool Compact { get; set; }
+
+    [JsonPropertyName("icon_size")]
+    public int IconSize { get; set; } = 20;
+
+    [JsonPropertyName("icons_dir")]
+    public string IconsDir { get; set; } = "icons";
+
     [JsonPropertyName("x")]
     public int X { get; set; } = 60;
 

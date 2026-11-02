@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-02
+
+- Added compact mode
+- Added icons to the compact mode
+
 ## [1.0.2] - 2026-11-02
 
 - Changed the default log location

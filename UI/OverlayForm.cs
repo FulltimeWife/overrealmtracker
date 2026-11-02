@@ -15,12 +15,16 @@ public sealed class OverlayForm : Form
   private readonly Dictionary<string, Label> _itemLabels = new();
   private Label _status = null!;
   private Label _overrealmStatus = null!;
+  private Label? _compactBossLine;
+  private Label? _compactFloorLine;
+  private Label? _compactItemLine;
+  private readonly ToolTip _toolTip = new();
 
   private string _logPath;
   private bool _dragging;
   private Point _dragStart;
 
-  private static readonly Color BgColor = ColorTranslator.FromHtml("#14141c");
+  private static readonly Color BgColor = ColorTranslator.FromHtml("#1e1e1e");
   private static readonly Color GoldColor = ColorTranslator.FromHtml("#e8b84a");
   private static readonly Color TextColor = ColorTranslator.FromHtml("#d8d8e0");
   private static readonly Color ValueColor = Color.White;
@@ -59,7 +63,148 @@ public sealed class OverlayForm : Form
   private void BuildUi()
   {
     SuspendLayout();
+    if (_config.Compact) BuildCompactUi();
+    else BuildFullUi();
+    ResumeLayout(true);
+  }
 
+  private void BuildFullUi()
+  {
+    var layout = NewLayout();
+    AddHeader(layout, "Boss Counter");
+    foreach (var kv in _config.Bosses)
+      AddRow(layout, _bossLabels, kv.Key, kv.Value, noSuffix: true);
+
+    AddDivider(layout);
+    AddHeader(layout, "Floors");
+    foreach (var kv in _config.FloorNames)
+      AddRow(layout, _floorLabels, kv.Key, kv.Value, noSuffix: false);
+
+    AddDivider(layout);
+    AddHeader(layout, "Items");
+    foreach (var kv in _config.Items)
+      AddRow(layout, _itemLabels, kv.Key, kv.Value, noSuffix: false);
+    foreach (var kv in _config.ConditionalItems)
+      AddRow(layout, _itemLabels, kv.Key, kv.Value.Name, noSuffix: false);
+
+    AddStatus(layout);
+    Controls.Add(layout);
+    FinaliseLayout(layout);
+  }
+
+  private void BuildCompactUi()
+  {
+    var layout = NewLayout();
+
+    AddHeader(layout, "Bosses");
+    var bossStrip = new FlowLayoutPanel
+    {
+      AutoSize = true,
+      AutoSizeMode = AutoSizeMode.GrowAndShrink,
+      FlowDirection = FlowDirection.LeftToRight,
+      WrapContents = false,
+      Anchor = AnchorStyles.Left,
+      Margin = new Padding(0, 1, 0, 1),
+      BackColor = BackColor,
+    };
+    foreach (var kv in _config.Bosses)
+      bossStrip.Controls.Add(BuildCompactIconCounter(kv.Key, $"boss_{kv.Key}", kv.Value, _bossLabels));
+    layout.Controls.Add(bossStrip);
+    layout.SetColumnSpan(bossStrip, 2);
+
+    AddDivider(layout);
+    AddHeader(layout, "Floors");
+    var floorLine = new Label
+    {
+      ForeColor = TextColor,
+      Font = new Font("Segoe UI", 11, FontStyle.Bold),
+      AutoSize = true,
+      Margin = new Padding(0, 1, 0, 1),
+    };
+    layout.Controls.Add(floorLine);
+    layout.SetColumnSpan(floorLine, 2);
+    _compactFloorLine = floorLine;
+
+    AddDivider(layout);
+    AddHeader(layout, "Items");
+    var itemStrip = new FlowLayoutPanel
+    {
+      AutoSize = true,
+      AutoSizeMode = AutoSizeMode.GrowAndShrink,
+      FlowDirection = FlowDirection.LeftToRight,
+      WrapContents = false,
+      Anchor = AnchorStyles.Left,
+      Margin = new Padding(0, 1, 0, 1),
+      BackColor = BackColor,
+    };
+    foreach (var kv in _config.Items)
+      itemStrip.Controls.Add(BuildCompactIconCounter(kv.Key, $"item_{kv.Key}", kv.Value, _itemLabels));
+    foreach (var kv in _config.ConditionalItems)
+      itemStrip.Controls.Add(BuildCompactIconCounter(kv.Key, $"item_{kv.Key}", kv.Value.Name, _itemLabels));
+    layout.Controls.Add(itemStrip);
+    layout.SetColumnSpan(itemStrip, 2);
+
+    AddStatus(layout);
+    Controls.Add(layout);
+    FinaliseLayout(layout);
+  }
+
+  private Control BuildCompactIconCounter(string id, string iconBaseName, string tooltipText, Dictionary<string, Label> store)
+  {
+    var container = new FlowLayoutPanel
+    {
+      AutoSize = true,
+      AutoSizeMode = AutoSizeMode.GrowAndShrink,
+      FlowDirection = FlowDirection.LeftToRight,
+      WrapContents = false,
+      Margin = new Padding(0, 0, 12, 0),
+      BackColor = BackColor,
+    };
+
+    var icon = TryLoadIcon(iconBaseName);
+    if (icon is not null)
+    {
+      var pic = new PictureBox
+      {
+        Image = icon,
+        SizeMode = PictureBoxSizeMode.Zoom,
+        Size = new Size(_config.IconSize, _config.IconSize),
+        Anchor = AnchorStyles.Left,
+        Margin = new Padding(0, 0, 4, 0),
+      };
+      _toolTip.SetToolTip(pic, tooltipText);
+      container.Controls.Add(pic);
+    }
+    else
+    {
+      container.Controls.Add(new Label
+      {
+        Text = tooltipText + ":",
+        ForeColor = TextColor,
+        Font = new Font("Segoe UI", 11),
+        AutoSize = true,
+        Anchor = AnchorStyles.Left,
+        Margin = new Padding(0, 0, 4, 0),
+      });
+    }
+
+    var valueLbl = new Label
+    {
+      Text = "0",
+      ForeColor = ValueColor,
+      Font = new Font("Segoe UI", 12, FontStyle.Bold),
+      AutoSize = true,
+      Anchor = AnchorStyles.Left,
+      Margin = new Padding(0, 0, 0, 0),
+    };
+
+    container.Controls.Add(valueLbl);
+    store[id] = valueLbl;
+    return container;
+  }
+
+  private TableLayoutPanel NewLayout()
+  {
     var layout = new TableLayoutPanel
     {
       Dock = DockStyle.Fill,
@@ -71,74 +216,100 @@ public sealed class OverlayForm : Form
     };
     layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
     layout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+    return layout;
+  }
 
-    void AddHeader(string text)
+  private static void AddHeader(TableLayoutPanel layout, string text)
+  {
+    var lbl = new Label
     {
-      var lbl = new Label
+      Text = text,
+      ForeColor = GoldColor,
+      Font = new Font("Segoe UI", 10, FontStyle.Bold),
+      AutoSize = true,
+      Margin = new Padding(0, 4, 0, 2),
+    };
+    layout.Controls.Add(lbl);
+    layout.SetColumnSpan(lbl, 2);
+  }
+
+  private static void AddDivider(TableLayoutPanel layout)
+  {
+    var div = new Panel
+    {
+      Height = 1,
+      Dock = DockStyle.Fill,
+      BackColor = DividerColor,
+      Margin = new Padding(0, 8, 0, 4),
+    };
+    layout.Controls.Add(div);
+    layout.SetColumnSpan(div, 2);
+  }
+
+  private void AddRow(
+    TableLayoutPanel layout,
+    Dictionary<string, Label> store,
+    string id,
+    string displayName,
+    bool noSuffix,
+    string? iconBaseName = null)
+  {
+    var icon = iconBaseName is null ? null : TryLoadIcon(iconBaseName);
+
+    var nameCell = new TableLayoutPanel
+    {
+      AutoSize = true,
+      AutoSizeMode = AutoSizeMode.GrowAndShrink,
+      ColumnCount = 2,
+      RowCount = 1,
+      Anchor = AnchorStyles.Left,
+      Margin = new Padding(0, 2, 0, 2),
+      BackColor = BackColor,
+    };
+    nameCell.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+    nameCell.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
+
+    if (icon is not null)
+    {
+      nameCell.Controls.Add(new PictureBox
       {
-        Text = text,
-        ForeColor = GoldColor,
-        Font = new Font("Segoe UI", 10, FontStyle.Bold),
-        AutoSize = true,
-        Margin = new Padding(0, 4, 0, 2),
-      };
-      layout.Controls.Add(lbl);
-      layout.SetColumnSpan(lbl, 2);
+        Image = icon,
+        SizeMode = PictureBoxSizeMode.Zoom,
+        Size = new Size(_config.IconSize, _config.IconSize),
+        Anchor = AnchorStyles.None,
+        Margin = new Padding(0, 0, 8, 0),
+      }, 0, 0);
     }
 
-    void AddDivider()
+    nameCell.Controls.Add(new Label
     {
-      var div = new Panel { Height = 1, Dock = DockStyle.Fill, BackColor = DividerColor, Margin = new Padding(0, 8, 0, 4) };
-      layout.Controls.Add(div);
-      layout.SetColumnSpan(div, 2);
-    }
+      Text = noSuffix ? displayName : displayName + ":",
+      ForeColor = TextColor,
+      Font = new Font("Segoe UI", 11),
+      AutoSize = true,
+      Anchor = AnchorStyles.Left,
+      Margin = new Padding(0, 0, 0, 0),
+    }, 1, 0);
 
-    void AddRow(string name, Dictionary<string, Label> store, string id, string suffix = "")
+    var valueLbl = new Label
     {
-      var nameLbl = new Label
-      {
-        Text = name + suffix,
-        ForeColor = TextColor,
-        Font = new Font("Segoe UI", 11),
-        AutoSize = true,
-        Anchor = AnchorStyles.Left,
-        Margin = new Padding(0, 1, 0, 1),
-      };
-      var valueLbl = new Label
-      {
-        Text = "0",
-        ForeColor = ValueColor,
-        Font = new Font("Segoe UI", 12, FontStyle.Bold),
-        AutoSize = false,
-        Width = 48,
-        TextAlign = ContentAlignment.MiddleRight,
-        Anchor = AnchorStyles.Right,
-        Margin = new Padding(0, 1, 0, 1),
-      };
-      layout.Controls.Add(nameLbl);
-      layout.Controls.Add(valueLbl);
-      store[id] = valueLbl;
-    }
+      Text = "0",
+      ForeColor = ValueColor,
+      Font = new Font("Segoe UI", 12, FontStyle.Bold),
+      AutoSize = false,
+      Width = 48,
+      TextAlign = ContentAlignment.MiddleRight,
+      Anchor = AnchorStyles.Right,
+      Margin = new Padding(0, 4, 0, 0),
+    };
 
-    AddHeader("Overrealm Tracker");
-    AddHeader("Boss Counter");
-    foreach (var kv in _config.Bosses)
-      AddRow(kv.Value, _bossLabels, kv.Key);
+    layout.Controls.Add(nameCell);
+    layout.Controls.Add(valueLbl);
+    store[id] = valueLbl;
+  }
 
-    AddDivider();
-    AddHeader("Floors");
-    foreach (var kv in _config.FloorNames)
-      AddRow(kv.Value, _floorLabels, kv.Key, ":");
-
-    AddDivider();
-    AddHeader("Items");
-    foreach (var kv in _config.Items)
-      AddRow(kv.Value, _itemLabels, kv.Key, ":");
-
-    // Conditional items (e.g. Solid River, base 3811) shown alongside normal items.
-    foreach (var kv in _config.ConditionalItems)
-      AddRow(kv.Value.Name, _itemLabels, kv.Key, ":");
-
+  private void AddStatus(TableLayoutPanel layout)
+  {
     _overrealmStatus = new Label
     {
       Text = "Out of Overrealm",
@@ -160,15 +331,14 @@ public sealed class OverlayForm : Form
     };
     layout.Controls.Add(_status);
     layout.SetColumnSpan(_status, 2);
+  }
 
-    Controls.Add(layout);
+  private void FinaliseLayout(TableLayoutPanel layout)
+  {
     AutoSize = true;
     AutoSizeMode = AutoSizeMode.GrowAndShrink;
-
     foreach (Control c in layout.Controls) HookDrag(c);
     HookDrag(layout);
-
-    ResumeLayout(true);
   }
 
   private void HookDrag(Control c)
@@ -219,6 +389,15 @@ public sealed class OverlayForm : Form
       ConfigManager.Save(_config);
       ApplyMode();
     };
+
+    var compactItem = new ToolStripMenuItem("Compact mode") { CheckOnClick = true, Checked = _config.Compact };
+    compactItem.CheckedChanged += (_, _) =>
+    {
+      _config.Compact = compactItem.Checked;
+      ConfigManager.Save(_config);
+      RebuildUi();
+    };
+    menu.Items.Add(compactItem);
     menu.Items.Add(obsItem);
 
     menu.Items.Add(new ToolStripSeparator());
@@ -259,16 +438,62 @@ public sealed class OverlayForm : Form
 
   private void RefreshValues()
   {
+    if (_config.Compact) RefreshCompact();
+    else RefreshFull();
+
+    _overrealmStatus!.Text = _tracker.IsInOverrealm ? "In Overrealm" : "Out of Overrealm";
+    _overrealmStatus!.ForeColor = _tracker.IsInOverrealm ? GoldColor : TextColor;
+    _status!.Text = string.IsNullOrEmpty(_logPath) ? "Log not found - right-click to set" : "";
+  }
+
+  private void RefreshFull()
+  {
     foreach (var kv in _bossLabels)
       kv.Value.Text = _tracker.Counts.GetValueOrDefault(kv.Key).ToString();
     foreach (var kv in _floorLabels)
       kv.Value.Text = _tracker.FloorCounts.GetValueOrDefault(kv.Key).ToString();
     foreach (var kv in _itemLabels)
       kv.Value.Text = _tracker.ItemCounts.GetValueOrDefault(kv.Key).ToString();
+  }
 
-    _overrealmStatus!.Text = _tracker.IsInOverrealm ? "In Overrealm" : "Out of Overrealm";
-    _overrealmStatus!.ForeColor = _tracker.IsInOverrealm ? GoldColor : TextColor;
-    _status!.Text = string.IsNullOrEmpty(_logPath) ? "Log not found - right-click to set" : "";
+  private void RefreshCompact()
+  {
+    foreach (var kv in _bossLabels)
+      kv.Value.Text = _tracker.Counts.GetValueOrDefault(kv.Key).ToString();
+
+    foreach (var kv in _itemLabels)
+      kv.Value.Text = _tracker.ItemCounts.GetValueOrDefault(kv.Key).ToString();
+
+    if (_compactFloorLine is not null)
+    {
+      var parts = _config.FloorNames.Keys.Select(k =>
+          _tracker.FloorCounts.GetValueOrDefault(k).ToString());
+      _compactFloorLine.Text = string.Join(" / ", parts);
+    }
+  }
+
+  private void RebuildUi()
+  {
+    SuspendLayout();
+    Controls.Clear();
+    _bossLabels.Clear();
+    _floorLabels.Clear();
+    _itemLabels.Clear();
+    _compactBossLine = null;
+    _compactItemLine = null;
+    _compactFloorLine = null;
+
+    BuildUi();
+    ApplyMode();
+    ResumeLayout(true);
+    PerformLayout();
+    RefreshValues();
+  }
+
+  private static string StripSuffix(string s, char suffix)
+  {
+    var t = s.TrimEnd();
+    return t.EndsWith(suffix) ? t[..^1].TrimEnd() : t;
   }
 
   private void Tick()
@@ -281,5 +506,18 @@ public sealed class OverlayForm : Form
   {
     var p = config.LogPath;
     return !string.IsNullOrEmpty(p) && File.Exists(p) ? p : "";
+  }
+
+  private Image? TryLoadIcon(string iconBaseName)
+  {
+    if (string.IsNullOrEmpty(_config.IconsDir)) return null;
+    var path = Path.Combine(ConfigManager.AppDir, _config.IconsDir, iconBaseName + ".png");
+    if (!File.Exists(path)) return null;
+    try
+    {
+      using var src = Image.FromFile(path);
+      return new Bitmap(src, _config.IconSize, _config.IconSize);
+    }
+    catch { return null; }
   }
 }

@@ -13,13 +13,20 @@
     <InvariantGlobalization>true</InvariantGlobalization>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
 
-    <Version>1.0.2</Version>
-    <FileVersion>1.0.2.0</FileVersion>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <Version>1.1.0</Version>
+    <FileVersion>1.1.0.0</FileVersion>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
 
     <Product> Overrealm Tracker</Product>
     <Company>FulltimeWife</Company>
     <Copyright>Copyright © 2026 FulltimeWife</Copyright>
     <Description>Overlay tracker for Torchlight Infinite</Description>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Update="icons\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
 </Project>
