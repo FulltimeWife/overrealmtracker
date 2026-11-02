@@ -12,5 +12,14 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <InvariantGlobalization>true</InvariantGlobalization>
     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+    <Version>1.0.1</Version>
+    <FileVersion>1.0.1.0</FileVersion>
+    <AssemblyVersion>1.0.1.0</AssemblyVersion>
+
+    <Product> Overrealm Tracker</Product>
+    <Company>FulltimeWife</Company>
+    <Copyright>Copyright © 2026 FulltimeWife</Copyright>
+    <Description>Overlay tracker for Torchlight Infinite</Description>
   </PropertyGroup>
 </Project>
