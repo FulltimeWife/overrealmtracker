@@ -17,7 +17,7 @@ public sealed class ConditionalItem
 public sealed class AppConfig
 {
     [JsonPropertyName("log_path")]
-    public string LogPath { get; set; } = @"G:\Steam\steamapps\common\Torchlight Infinite\UE_game\TorchLight\Saved\Logs\UE_game.log";
+    public string LogPath { get; set; } = @"C:\\Program Files (x86)\\Steam\\steamapps\\common\\Torchlight Infinite\\UE_game\\TorchLight\\Saved\\Logs\\UE_game.log";
 
     [JsonPropertyName("bosses")]
     public Dictionary<string, string> Bosses { get; set; } = new()
