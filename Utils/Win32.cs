@@ -16,10 +16,6 @@ internal static class Win32
   [DllImport("user32.dll", SetLastError = true)]
   public static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
-  /// <summary>
-  /// Force the window to be an "app window" (listed in the taskbar and in
-  /// OBS's Window Capture dropdown) or a "tool window" (hidden from both).
-  /// </summary>
   public static void SetAppWindow(IntPtr hWnd, bool appWindow)
   {
     var ex = GetWindowLong(hWnd, GWL_EXSTYLE);
@@ -36,10 +32,6 @@ internal static class Win32
     SetWindowLong(hWnd, GWL_EXSTYLE, ex);
   }
 
-  /// <summary>
-  /// Toggle WS_EX_LAYERED. Needed to disable layering so BitBlt can capture
-  /// the window (Layered windows are captured as black by OBS on some GPUs).
-  /// </summary>
   public static void SetLayered(IntPtr hWnd, bool layered)
   {
     var ex = GetWindowLong(hWnd, GWL_EXSTYLE);

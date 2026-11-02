@@ -22,8 +22,8 @@ public sealed class AppConfig
     [JsonPropertyName("bosses")]
     public Dictionary<string, string> Bosses { get; set; } = new()
     {
-        ["2984001"] = "Doorkeeper",
-        ["2984002"] = "Doorhunter",
+        ["2984001"] = "Doorkeeper's:",
+        ["2984002"] = "Doorhunter's:",
     };
 
     [JsonPropertyName("floor_names")]

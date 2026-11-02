@@ -231,22 +231,12 @@ public sealed class OverlayForm : Form
     var obs = _config.ObsMode;
 
     TopMost = true;
-    ShowInTaskbar = obs;                    // OBS enumerates taskbar-visible windows
+    ShowInTaskbar = obs;
     Opacity = obs ? 1.0 : Math.Clamp(_config.Opacity, 0.1, 1.0);
 
-    // Ensure the form's Handle exists before we poke window styles.
     if (!IsHandleCreated) return;
-
-    // WS_EX_APPWINDOW makes this appear as a top-level app window that
-    // EnumWindows (and therefore OBS Window Capture) will list.
     Win32.SetAppWindow(Handle, appWindow: obs);
-
-    // Layered windows (set by Opacity < 1.0) are invisible to BitBlt capture.
-    // In OBS mode we're at Opacity 1.0 so no layering is applied; in overlay
-    // mode we WANT layering for transparency. Toggle explicitly to be sure.
     Win32.SetLayered(Handle, layered: !obs);
-
-    // Re-assert TopMost after the style poke — some Windows builds drop it.
     TopMost = true;
   }
 
