@@ -32,6 +32,9 @@ public sealed class TrackerState
     [JsonPropertyName("last_overrealm_leave_ts")]
     public string LastOverrealmLeaveTs { get; set; } = "";
 
+    [JsonPropertyName("last_item_pickup_ts")]
+    public Dictionary<string, string> LastItemPickupTs { get; set; } = new();
+
     public static TrackerState Load(string path)
     {
         var s = JsonHelper.Load<TrackerState>(path) ?? new TrackerState();

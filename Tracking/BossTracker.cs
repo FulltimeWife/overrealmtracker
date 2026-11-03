@@ -158,7 +158,7 @@ public sealed class BossTracker
                 changed = true;
                 if (string.CompareOrdinal(ts, bossNewest) > 0) bossNewest = ts;
             }
-            else if (line.Contains("ProtoName=PickItems"))
+            else if (line.Contains("ProtoName=PickItem"))
             {
                 _inPick = line.TrimEnd().EndsWith("start", StringComparison.Ordinal);
             }
@@ -179,6 +179,7 @@ public sealed class BossTracker
                         continue;
                     }
                     _state.ItemCounts[itemId] = _state.ItemCounts.GetValueOrDefault(itemId) + 1;
+                    _state.LastItemPickupTs[itemId] = ts;
                     changed = true;
                     if (string.CompareOrdinal(ts, itemNewest) > 0) itemNewest = ts;
                     continue;
