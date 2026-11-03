@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-11-03
+
+- Started tracking item pickup timestamps for future stuff
+
 ## [1.1.1] - 2026-11-02
 
 - Trickery in the exe to put icons into it rather than deal with zipping it up each time
