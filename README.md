@@ -1,3 +1,9 @@
+# Disclaimers
+
+**This is a work in progress, for fun program, if stuff doesn't work or there's bugs or something, don't pitchfork me over it**
+
+**also I am not affiliated with XD Entertainment in any way, I do not own the rights for the assets used in the tool. All rights belong to XD Entertainment**
+
 # Overrealm Tracker
 
 A lightweight overlay for **Torchlight: Infinite** that reads the game's log
