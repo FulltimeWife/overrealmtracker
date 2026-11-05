@@ -20,6 +20,11 @@ public sealed class BossTracker
     private string _lastOverrealmLeaveTs = "";
     private bool _overrealmRestored;
 
+    // AttributeMgr 
+    private static readonly HashSet<string> AttributeCheckedItems = new() { "3811" };
+    private const double AttributeWindowSeconds = 1.0;
+    private (string itemId, string ts)? _pendingLegendary;
+
     public IReadOnlyDictionary<string, int> Counts => _state.Counts;
     public IReadOnlyDictionary<string, int> FloorCounts => _state.FloorCounts;
     public IReadOnlyDictionary<string, int> ItemCounts => _state.ItemCounts;
@@ -59,16 +64,20 @@ public sealed class BossTracker
 
     public bool Poll(string logPath)
     {
+        var flushed = FlushStalePending();
+        if (flushed) Save();
+
         long size;
         try { size = new FileInfo(logPath).Length; }
-        catch { return false; }
+        catch { return flushed; }
 
         if (size < _pos)
         {
             _pos = 0;
             ResetFloorTracking();
+            _pendingLegendary = null;
         }
-        if (size == _pos) return false;
+        if (size == _pos) return flushed;
 
         byte[] data;
         using (var fs = new FileStream(logPath, FileMode.Open, FileAccess.Read,
@@ -81,7 +90,7 @@ public sealed class BossTracker
         }
 
         var lastNl = Array.LastIndexOf(data, (byte)'\n');
-        if (lastNl < 0) return false;
+        if (lastNl < 0) return flushed;
 
         var consumed = data.AsSpan(0, lastNl + 1);
         _pos += consumed.Length;
@@ -116,6 +125,31 @@ public sealed class BossTracker
         {
             var line = rawLine.TrimEnd('\r');
             if (line.Length == 0) continue;
+
+            if (_pendingLegendary is not null)
+            {
+                var (pendId, pendTs) = _pendingLegendary.Value;
+
+                if (line.Contains("AttributeMgr"))
+                {
+                    var am = LogPatterns.AttributeBase.Match(line);
+                    if (am.Success && am.Groups[1].Value == pendId)
+                    {
+                        _pendingLegendary = null;
+                        continue;
+                    }
+                }
+                else if (line.Length > 24 && line[0] == '[')
+                {
+                    var lineSec = LogPatterns.TsSeconds(line.Substring(1, 23));
+                    var pendSec = LogPatterns.TsSeconds(pendTs);
+                    if (lineSec is not null && pendSec is not null && lineSec.Value - pendSec.Value > AttributeWindowSeconds)
+                    {
+                        CommitPending();
+                        changed = true;
+                    }
+                }
+            }
 
             // ---- Overrealm detection via LevelLinkData ----
             var llm = LogPatterns.LevelLinkData.Match(line);
@@ -178,6 +212,19 @@ public sealed class BossTracker
                         if (string.CompareOrdinal(ts, itemNewest) > 0) itemNewest = ts;
                         continue;
                     }
+
+                    if (AttributeCheckedItems.Contains(itemId))
+                    {
+                        if (_pendingLegendary is not null)
+                        {
+                            CommitPending();
+                            changed = true;
+                        }
+                        _pendingLegendary = (itemId, ts);
+                        if (string.CompareOrdinal(ts, itemNewest) > 0) itemNewest = ts;
+                        continue;
+                    }
+
                     _state.ItemCounts[itemId] = _state.ItemCounts.GetValueOrDefault(itemId) + 1;
                     _state.LastItemPickupTs[itemId] = ts;
                     changed = true;
@@ -263,7 +310,7 @@ public sealed class BossTracker
             _state.LastItemTs = itemNewest;
             Save();
         }
-        return changed;
+        return changed || flushed;
     }
 
     private bool IsWithinOverrealmWindow(double graceSeconds)
@@ -274,5 +321,26 @@ public sealed class BossTracker
         if (leftSec is null) return false;
         var nowSec = new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds();
         return nowSec - leftSec.Value <= graceSeconds;
+    }
+
+    private void CommitPending()
+    {
+        if (_pendingLegendary is null) return;
+        var (itemId, ts) = _pendingLegendary.Value;
+        _pendingLegendary = null;
+        _state.ItemCounts[itemId] = _state.ItemCounts.GetValueOrDefault(itemId) + 1;
+        _state.LastItemPickupTs[itemId] = ts;
+        if (string.CompareOrdinal(ts, _state.LastItemTs) > 0) _state.LastItemTs = ts;
+    }
+
+    private bool FlushStalePending()
+    {
+        if (_pendingLegendary is null) return false;
+        var sec = LogPatterns.TsSeconds(_pendingLegendary.Value.ts);
+        if (sec is null) { _pendingLegendary = null; return false; }
+        var now = new DateTimeOffset(DateTime.Now).ToUnixTimeSeconds();
+        if (now - sec.Value <= AttributeWindowSeconds) return false;
+        CommitPending();
+        return true;
     }
 }

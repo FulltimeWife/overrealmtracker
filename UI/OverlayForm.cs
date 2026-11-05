@@ -42,11 +42,10 @@ public sealed class OverlayForm : Form
     BackColor = BgColor;
     StartPosition = FormStartPosition.Manual;
     Location = new Point(config.X, config.Y);
-    ShowInTaskbar = false;
+    ShowInTaskbar = true;
     Text = "Overrealm Tracker";
 
     BuildUi();
-    ApplyMode();
 
     _timer = new System.Windows.Forms.Timer { Interval = Math.Max(50, config.PollMs) };
     _timer.Tick += (_, _) => Tick();
@@ -379,16 +378,9 @@ public sealed class OverlayForm : Form
   private ContextMenuStrip BuildContextMenu()
   {
     var menu = new ContextMenuStrip();
-    menu.Items.Add("Reset all counts", null, (_, _) => { _tracker.Reset(); RefreshValues(); });
+
     menu.Items.Add("Choose log file...", null, (_, _) => PickLog());
 
-    var obsItem = new ToolStripMenuItem("OBS capture mode") { CheckOnClick = true, Checked = _config.ObsMode };
-    obsItem.CheckedChanged += (_, _) =>
-    {
-      _config.ObsMode = obsItem.Checked;
-      ConfigManager.Save(_config);
-      ApplyMode();
-    };
 
     var compactItem = new ToolStripMenuItem("Compact mode") { CheckOnClick = true, Checked = _config.Compact };
     compactItem.CheckedChanged += (_, _) =>
@@ -398,25 +390,11 @@ public sealed class OverlayForm : Form
       RebuildUi();
     };
     menu.Items.Add(compactItem);
-    menu.Items.Add(obsItem);
 
     menu.Items.Add(new ToolStripSeparator());
+    //menu.Items.Add("Reset all counts", null, (_, _) => { _tracker.Reset(); RefreshValues(); });
     menu.Items.Add("Quit", null, (_, _) => Close());
     return menu;
-  }
-
-  private void ApplyMode()
-  {
-    var obs = _config.ObsMode;
-
-    TopMost = true;
-    ShowInTaskbar = obs;
-    Opacity = obs ? 1.0 : Math.Clamp(_config.Opacity, 0.1, 1.0);
-
-    if (!IsHandleCreated) return;
-    Win32.SetAppWindow(Handle, appWindow: obs);
-    Win32.SetLayered(Handle, layered: !obs);
-    TopMost = true;
   }
 
   private void PickLog()
@@ -484,7 +462,6 @@ public sealed class OverlayForm : Form
     _compactFloorLine = null;
 
     BuildUi();
-    ApplyMode();
     ResumeLayout(true);
     PerformLayout();
     RefreshValues();

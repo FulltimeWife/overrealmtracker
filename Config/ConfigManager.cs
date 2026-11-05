@@ -23,14 +23,12 @@ public static class ConfigManager
         if (!string.IsNullOrEmpty(saved.LogPath)) defaults.LogPath = saved.LogPath;
         if (!string.IsNullOrEmpty(saved.EntryPortalCfg)) defaults.EntryPortalCfg = saved.EntryPortalCfg;
         if (!string.IsNullOrEmpty(saved.NextFloorPortalCfg)) defaults.NextFloorPortalCfg = saved.NextFloorPortalCfg;
-        if (!string.IsNullOrEmpty(saved.ObsBackdropColor)) defaults.ObsBackdropColor = saved.ObsBackdropColor;
         if (!string.IsNullOrEmpty(saved.IconsDir)) defaults.IconsDir = saved.IconsDir;
         if (saved.HubLevelType != 0) defaults.HubLevelType = saved.HubLevelType;
         if (saved.BossRarity != 0) defaults.BossRarity = saved.BossRarity;
         if (saved.PollMs > 0) defaults.PollMs = saved.PollMs;
         if (saved.Opacity > 0) defaults.Opacity = saved.Opacity;
         if (saved.IconSize > 0) defaults.IconSize = saved.IconSize;
-        defaults.ObsMode = saved.ObsMode;
         defaults.Compact = saved.Compact;
         if (saved.X != 0 || saved.Y != 0) { defaults.X = saved.X; defaults.Y = saved.Y; }
         if (saved.OverrealmLevelTypes.Count > 0) defaults.OverrealmLevelTypes = saved.OverrealmLevelTypes;

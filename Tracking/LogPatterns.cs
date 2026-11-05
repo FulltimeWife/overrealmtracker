@@ -19,6 +19,10 @@ public static class LogPatterns
         @"^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3})\]\[\s*\d+\].*BagMgr@:Modfy BagItem PageId = \d+ SlotId = \d+ ConfigBaseId = (\d+) Num = (\d+)",
         RegexOptions.Compiled);
 
+    public static readonly Regex AttributeBase = new(
+    @"AttributeMgr:\w+\(BaseId=(\d+)",
+    RegexOptions.Compiled);
+
     public static readonly Regex Active = new(
         @"^\[(\d{4}\.\d{2}\.\d{2}-\d{2}\.\d{2}\.\d{2}:\d{3})\]\[\s*\d+\].*Begin active Map Portal cfgId (\d+)",
         RegexOptions.Compiled);

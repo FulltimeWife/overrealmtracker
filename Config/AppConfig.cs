@@ -74,14 +74,8 @@ public sealed class AppConfig
     [JsonPropertyName("opacity")]
     public double Opacity { get; set; } = 0.85;
 
-    [JsonPropertyName("obs_mode")]
-    public bool ObsMode { get; set; }
-
-    [JsonPropertyName("obs_backdrop_color")]
-    public string ObsBackdropColor { get; set; } = "#1e1e1e";
-
     [JsonPropertyName("compact")]
-    public bool Compact { get; set; }
+    public bool Compact { get; set; } = true;
 
     [JsonPropertyName("icon_size")]
     public int IconSize { get; set; } = 20;
