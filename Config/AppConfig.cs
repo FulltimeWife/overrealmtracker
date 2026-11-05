@@ -83,6 +83,9 @@ public sealed class AppConfig
     [JsonPropertyName("icons_dir")]
     public string IconsDir { get; set; } = "icons";
 
+    [JsonPropertyName("always_on_top")]
+    public bool AlwaysOnTop { get; set; } = true;
+
     [JsonPropertyName("x")]
     public int X { get; set; } = 60;
 

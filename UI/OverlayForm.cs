@@ -31,6 +31,8 @@ public sealed class OverlayForm : Form
   private static readonly Color ErrorColor = ColorTranslator.FromHtml("#ff7a7a");
   private static readonly Color DividerColor = ColorTranslator.FromHtml("#3a3a4a");
 
+  protected override bool ShowWithoutActivation => true;
+
   public OverlayForm(AppConfig config)
   {
     _config = config;
@@ -43,6 +45,7 @@ public sealed class OverlayForm : Form
     StartPosition = FormStartPosition.Manual;
     Location = new Point(config.X, config.Y);
     ShowInTaskbar = true;
+    TopMost = config.AlwaysOnTop;
     Text = "Overrealm Tracker";
 
     BuildUi();
@@ -390,6 +393,15 @@ public sealed class OverlayForm : Form
       RebuildUi();
     };
     menu.Items.Add(compactItem);
+
+    var topItem = new ToolStripMenuItem("Always on top") { CheckOnClick = true, Checked = _config.AlwaysOnTop };
+    topItem.CheckedChanged += (_, _) =>
+    {
+      _config.AlwaysOnTop = topItem.Checked;
+      TopMost = topItem.Checked;
+      ConfigManager.Save(_config);
+    };
+    menu.Items.Add(topItem);
 
     menu.Items.Add(new ToolStripSeparator());
     //menu.Items.Add("Reset all counts", null, (_, _) => { _tracker.Reset(); RefreshValues(); });
