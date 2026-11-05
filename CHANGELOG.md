@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+## [1.1.4] - 2026-11-05
+
+- Added Always on Top toggle
+
 ## [1.1.3] - 2026-11-05
 
 - Updated Solid River detection login, no longer false flags on non-legendary items
