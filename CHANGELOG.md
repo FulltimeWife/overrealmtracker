@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-11-05
+
+- Updated Solid River detection login, no longer false flags on non-legendary items
+- Updated the config to remove OBS mode (defunct with winAPI)
+- Defaulted to compact mode because it's what most people use anyway
+
 ## [1.1.2] - 2026-11-03
 
 - Started tracking item pickup timestamps for future stuff
